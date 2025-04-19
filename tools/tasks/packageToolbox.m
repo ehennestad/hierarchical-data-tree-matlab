@@ -4,6 +4,6 @@ function packageToolbox(releaseType, versionString)
         versionString {mustBeTextScalar} = "";
     end
     installMatBox()
-    projectRootDirectory = hdtreetools.projectdir();
+    projectRootDirectory = datatreetools.projectdir();
     matbox.tasks.packageToolbox(projectRootDirectory, releaseType, versionString)
 end

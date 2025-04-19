@@ -1,7 +1,7 @@
 function versionStr = toolboxversion()
 % toolboxversion - Get the version identifier for the openMINDS toolbox
 
-    rootPath = hdtree.toolboxdir();
+    rootPath = datatree.toolboxdir();
     contentsFile = fullfile(rootPath, 'Contents.m');
 
     if ~isfile(contentsFile)
@@ -19,7 +19,7 @@ function versionStr = toolboxversion()
     end
 
     if isempty(matchedStr)
-        error('Hierarchical Data Tree:Version:VersionNotFound', ...
+        error('HierarchicalDataTree:Version:VersionNotFound', ...
             'No version was detected for this matbox installation.')
     end
     versionStr = matchedStr{1};

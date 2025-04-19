@@ -3,6 +3,6 @@ function createTestedWithBadgeForToolbox(versionNumber)
         versionNumber (1,1) string
     end
     installMatBox()
-    projectRootDirectory = hdtreetools.projectdir();
+    projectRootDirectory = datatreetools.projectdir();
     matbox.tasks.createTestedWithBadgeforToolbox(versionNumber, projectRootDirectory)
 end

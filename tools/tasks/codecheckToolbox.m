@@ -1,5 +1,5 @@
 function codecheckToolbox()
     installMatBox()
-    projectRootDirectory = hdtreetools.projectdir();
+    projectRootDirectory = datatreetools.projectdir();
     matbox.tasks.codecheckToolbox(projectRootDirectory)
 end

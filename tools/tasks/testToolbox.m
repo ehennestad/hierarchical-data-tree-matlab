@@ -1,5 +1,5 @@
 function testToolbox(varargin)
     installMatBox()
-    projectRootDirectory = hdtreetools.projectdir();
+    projectRootDirectory = datatreetools.projectdir();
     matbox.tasks.testToolbox(projectRootDirectory, varargin{:})
 end
