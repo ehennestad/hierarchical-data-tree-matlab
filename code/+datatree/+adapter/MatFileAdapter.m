@@ -11,9 +11,18 @@ classdef MatFileAdapter < datatree.adapter.ContentAdapter
     %
     %   See also ContentAdapter, FileContentTree
     
-    properties
+    properties (SetAccess = private)
         FilePath % Path to the MAT file
         FileData % Contents of the MAT file
+    end
+
+    properties
+        % For structure arrays, it might be convenient to see each struct
+        % array element as a separate node in the tree
+        ShowStructArrayElementsAsSeparateNodes (1,1) logical = true
+        % It might also be good to have a cutoff, say, you dont want to
+        % expand a struct array with 100s of elements
+        NumStructElementsToSplit (1,1) double = 5
     end
     
     methods
@@ -76,7 +85,30 @@ classdef MatFileAdapter < datatree.adapter.ContentAdapter
             path = node.Path;
             
             if isstruct(data)
-                % Handle structure fields
+                % Handle struct arrays - each element becomes a separate node
+                if ~isscalar(data) && obj.doExpandStructArray(data)
+                    % Create a node for each element in the struct array
+                    numElements = numel(data);
+                    nodes = cell(numElements, 1);
+                    
+                    for i = 1:numElements
+                        % Create element name with index suffix
+                        elementName = sprintf('%s_%d', node.Name, i);
+                        % Create element path with parenthesis indexing
+                        elementPath = sprintf('%s(%d)', path, i);
+                        
+                        % Create node for this struct array element
+                        nodes{i} = struct(...
+                            'Name', elementName, ...
+                            'Path', elementPath, ...
+                            'Type', 'struct', ...
+                            'Data', data(i) ...
+                        );
+                    end
+                    return;
+                end
+
+                % Handle structure fields for scalar structs
                 fieldNames = fieldnames(data);
                 
                 if isempty(fieldNames)
@@ -216,10 +248,15 @@ classdef MatFileAdapter < datatree.adapter.ContentAdapter
             
             % Structures and cell arrays have children
             if isstruct(data)
-                tf = ~isempty(fieldnames(data));
+                if isscalar(data) || ~obj.doExpandStructArray(data)
+                    % Scalar struct or non-expandable struct has children if it has fields
+                    tf = ~isempty(fieldnames(data));
+                else
+                    % Non-scalar & expandable struct arrays always have children (the elements)
+                    tf = true;
+                end
             elseif iscell(data)
-                %tf = ~isempty(data) && any(size(data) > 0);
-                tf = false;
+                tf = ~isempty(data) && any(size(data) > 0);
             elseif isnumeric(data) && ~isscalar(data)
                 % Non-scalar numeric arrays have size and class children
                 tf = false;
@@ -240,6 +277,13 @@ classdef MatFileAdapter < datatree.adapter.ContentAdapter
             
             obj.FileData = [];
             obj.FilePath = '';
+        end
+    end
+
+    methods (Access = private)
+        function tf = doExpandStructArray(obj, structArray)
+            tf = obj.ShowStructArrayElementsAsSeparateNodes && ...
+                numel(structArray) <= obj.NumStructElementsToSplit;
         end
     end
 end
