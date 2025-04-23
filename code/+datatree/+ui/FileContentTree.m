@@ -16,7 +16,7 @@ classdef FileContentTree < handle
     %
     %   See also ContentAdapter, TreeNodeProvider, ContentAdapterFactory
     
-    properties
+    properties (SetAccess = private)
         % UI components
         UITree matlab.ui.container.CheckBoxTree % or uitree depending on MATLAB version
         
@@ -28,6 +28,8 @@ classdef FileContentTree < handle
         
         % Selection state
         SelectedNodes
+
+        CheckedNodeNames
 
         ExpandAllOnCreation (1,1) matlab.lang.OnOffSwitchState = "off"
     end
@@ -94,7 +96,11 @@ classdef FileContentTree < handle
             % Get parent container
             parent = obj.UITree.Parent;
         end
-        
+
+        function value = get.CheckedNodeNames(obj)
+            value = string( {obj.UITree.CheckedNodes.Text} );
+        end
+
         function loadFile(obj, filePath, adapter)
             % Load a file and display its contents
             % filePath: Path to file to load
