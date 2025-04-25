@@ -11,6 +11,11 @@ function demo_dataTreeViewer(filePath)
 %   See also FileContentTree, ContentAdapter, TreeNodeProvider
 
     % Create figure
+
+    arguments
+        filePath (1,1) string {mustBeFile}
+    end
+
     f = uifigure('Name', 'File Content Tree Demo', 'Position', [100 100 800 600]);
     
     % Create layout
@@ -18,8 +23,15 @@ function demo_dataTreeViewer(filePath)
     gl.ColumnWidth = {'1x', '2x'};
     
     % Create tree panel
-    % treePanel = uipanel(gl);
-    % treePanel.Layout.Column = 1;
+    glTree = uigridlayout(gl, [1 1]);
+    glTree.Layout.Row = 1;
+    glTree.Layout.Column = 1;
+
+    % Create file content tree
+    tree = datatree.ui.FileContentTree(glTree, ...
+        'AllowMultipleSelection', false, ...
+        'FilePath', filePath, ...
+        'ExpandAllOnCreation', "on");
     
     % Create preview panel
     previewPanel = uipanel(gl);
@@ -29,18 +41,6 @@ function demo_dataTreeViewer(filePath)
     previewText = uitextarea(previewPanel);
     previewText.Position = [10 10 previewPanel.Position(3)-20 previewPanel.Position(4)-20];
     previewText.Value = 'Select a node to preview its contents';
-    
-    glTree = uigridlayout(gl, [1 1]);
-    glTree.Layout.Row = 1;
-    glTree.Layout.Column = 1;
-
-
-    % Create file content tree
-    tree = datatree.ui.FileContentTree(glTree, ...
-        'AllowMultipleSelection', false, ...
-        'FilePath', filePath, ...
-        'ExpandAllOnCreation', "on");
-    keyboard
 
     % Create toolbar
     tb = uitoolbar(f);
@@ -54,21 +54,23 @@ function demo_dataTreeViewer(filePath)
     openDirButton = uipushtool(tb, 'Icon', fullfile(matlabroot, 'toolbox', 'matlab', 'icons', 'foldericon.gif'));
     openDirButton.Tooltip = 'Open Directory';
     openDirButton.ClickedCallback = @(src, event) openDirectory();
+       
+    % Set selection callback
+    tree.NodeSelectionChangedFcn = @(src, event) previewNode(event.SelectedNodes);
     
     % Open file callback
     function openFile()
         % Get supported extensions
         extensions = datatree.utility.ContentAdapterFactory.getSupportedExtensions();
+        extensions(strcmp(extensions, 'folder')) = [];
         
         % Create filter spec for uigetfile
-        filterSpec = cell(0,2);
+        filterSpec = cell(numel(extensions), 2);
         for i = 1:length(extensions)
             ext = extensions{i};
-            if strcmp(ext, 'folder')
-                continue; % Skip folder for file dialog
-            end
-            filterSpec{end+1} = ['*' ext];
-            filterSpec{end+1} = ['*' ext ' files'];
+    
+            filterSpec{i, 1} = ['*' ext];
+            filterSpec{i, 2} = ['*' ext ' files'];
         end
         
         % Add all files option
@@ -76,7 +78,7 @@ function demo_dataTreeViewer(filePath)
         filterSpec{end+1} = 'All files';
         
         filterSpec = reshape(filterSpec, 2, [])';
-
+    
         % Show file dialog
         [fileName, filePath] = uigetfile(filterSpec, 'Select a file');
         
@@ -100,7 +102,7 @@ function demo_dataTreeViewer(filePath)
             errordlg(['Error opening file: ' ME.message], 'File Open Error');
         end
     end
-
+    
     % Open directory callback
     function openDirectory()
         % Show directory dialog
@@ -124,9 +126,6 @@ function demo_dataTreeViewer(filePath)
         end
     end
     
-    % Set selection callback
-    tree.NodeSelectionChangedFcn = @(src, event) previewNode(event.SelectedNodes);
-    
     % Preview node callback
     function previewNode(nodes)
         if isempty(nodes)
@@ -135,7 +134,17 @@ function demo_dataTreeViewer(filePath)
         end
         
         % Get first selected node
-        node = nodes{1};
+        if isa(nodes, 'cell')
+            node = nodes{1};
+        else
+            node = nodes;
+        end
+        
+        assert(isa(node, 'struct'), 'Expected node to be a structure.')
+        % try
+        % catch
+        %     keyboard
+        % end
         
         % Get node data
         data = tree.Model.getNodeData(node);
@@ -146,7 +155,10 @@ function demo_dataTreeViewer(filePath)
             fields = fieldnames(data);
             preview = sprintf('Node: %s\nType: %s\nPath: %s\n\nStructure with %d fields:\n\n', ...
                 node.Name, node.Type, node.Path, length(fields));
-            for i = 1:min(length(fields), 20)
+
+            numPreviews = min(length(fields), 20);
+
+            for i = 1:numPreviews
                 fieldValue = data.(fields{i});
                 if ischar(fieldValue) && numel(fieldValue) < 50
                     preview = [preview, fields{i}, ': ', fieldValue, '\n'];
@@ -155,6 +167,7 @@ function demo_dataTreeViewer(filePath)
                 else
                     preview = [preview, fields{i}, ': [', class(fieldValue), ']\n'];
                 end
+                %preview = [preview, newPreview];
             end
             if length(fields) > 20
                 preview = [preview, '...\n'];
@@ -196,7 +209,9 @@ function demo_dataTreeViewer(filePath)
             preview = sprintf('Node: %s\nType: %s\nPath: %s\n\nData of type %s\n', ...
                 node.Name, node.Type, node.Path, class(data));
         end
+
+
         
-        previewText.Value = preview;
+        previewText.Value = sprintf(preview);
     end
 end
