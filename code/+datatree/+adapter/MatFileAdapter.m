@@ -120,7 +120,7 @@ classdef MatFileAdapter < datatree.adapter.ContentAdapter
                 
                 for i = 1:length(fieldNames)
                     name = fieldNames{i};
-                    childData = data.(name);
+                    childData = {data.(name)};
                     childPath = [path '.' name];
                     
                     % Create node
