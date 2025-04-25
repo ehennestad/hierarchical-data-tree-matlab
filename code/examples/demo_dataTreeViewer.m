@@ -13,7 +13,7 @@ function demo_dataTreeViewer(filePath)
     % Create figure
 
     arguments
-        filePath (1,1) string {mustBeFile}
+        filePath (1,1) string = missing %{mustBeFile}
     end
 
     f = uifigure('Name', 'File Content Tree Demo', 'Position', [100 100 800 600]);
@@ -61,7 +61,7 @@ function demo_dataTreeViewer(filePath)
     % Add open button
     openButton = uipushtool(tb, 'Icon', fullfile(matlabroot, 'toolbox', 'matlab', 'icons', 'file_open.png'));
     openButton.Tooltip = 'Open File';
-    openButton.ClickedCallback = @(src, event) openFile();
+    openButton.ClickedCallback = @(src, event) openFile(f);
     
     % Add open directory button
     openDirButton = uipushtool(tb, 'Icon', fullfile(matlabroot, 'toolbox', 'matlab', 'icons', 'foldericon.gif'));
@@ -72,44 +72,20 @@ function demo_dataTreeViewer(filePath)
     tree.NodeSelectionChangedFcn = @(src, event) previewNode(event.SelectedNodes);
     
     % Open file callback
-    function openFile()
-        % Get supported extensions
-        extensions = datatree.utility.ContentAdapterFactory.getSupportedExtensions();
-        extensions(strcmp(extensions, 'folder')) = [];
-        
-        % Create filter spec for uigetfile
-        filterSpec = cell(numel(extensions), 2);
-        for i = 1:length(extensions)
-            ext = extensions{i};
-    
-            filterSpec{i, 1} = ['*' ext];
-            filterSpec{i, 2} = ['*' ext ' files'];
-        end
-        
-        % Add all files option
-        filterSpec{end+1} = '*.*';
-        filterSpec{end+1} = 'All files';
-        
-        filterSpec = reshape(filterSpec, 2, [])';
-    
-        % Show file dialog
-        [fileName, filePath] = uigetfile(filterSpec, 'Select a file');
-        
-        % Check if user cancelled
-        if isequal(fileName, 0)
-            return;
-        end
-        
-        % Create full file path
-        fullPath = fullfile(filePath, fileName);
-        
+    function openFile(hFigure)        
         % Create adapter
+
+        h = uiprogressdlg(hFigure, 'Indeterminate','on','Message','Please wait, loading file...');
+        progressCleanup = onCleanup(@() delete(h));
+
         try
-            adapter = datatree.utility.ContentAdapterFactory.createAdapter(fullPath);
-            tree.loadFile(fullPath, adapter);
+            adapter = datatree.utility.ContentAdapterFactory.createAdapterFromDialog();
+            if isempty(adapter); return; end
+
+            tree.loadFile(adapter.FilePath, adapter);
             
             % Update preview
-            previewText.Value = sprintf('Opened file: %s\n\nSelect a node to preview its contents', fullPath);
+            previewText.Value = sprintf('Opened file: %s\n\nSelect a node to preview its contents', adapter.FilePath);
         catch ME
             % Show error message
             errordlg(['Error opening file: ' ME.message], 'File Open Error');
@@ -129,6 +105,8 @@ function demo_dataTreeViewer(filePath)
         % Create adapter
         try
             adapter = datatree.FileSystemAdapter();
+            if isempty(adapter); return; end
+
             tree.loadFile(dirPath, adapter);
             
             % Update preview

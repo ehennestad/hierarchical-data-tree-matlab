@@ -17,8 +17,9 @@ classdef Hdf5FileAdapter < datatree.adapter.ContentAdapter
     end
     
     methods
-        function obj = Hdf5FileAdapter()
+        function obj = Hdf5FileAdapter(filePath)
             % Constructor
+            obj.FilePath = filePath;
         end
         
         function open(obj, filePath)
@@ -53,7 +54,7 @@ classdef Hdf5FileAdapter < datatree.adapter.ContentAdapter
             nodes = {rootNode};
         end
         
-        function nodes = getChildren(obj, node)
+        function nodes = getChildren(~, node)
             % Get children of a node
             % node: Parent node
             
@@ -123,7 +124,7 @@ classdef Hdf5FileAdapter < datatree.adapter.ContentAdapter
             end
         end
         
-        function tf = hasChildren(obj, node)
+        function tf = hasChildren(~, node)
             % Check if a node has children
             % node: Node to check
             

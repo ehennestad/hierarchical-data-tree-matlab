@@ -112,6 +112,10 @@ classdef FileContentTree < handle
             if nargin < 3 || isempty(adapter)
                 adapter = datatree.utility.ContentAdapterFactory.createAdapter(filePath);
                 obj.Model = datatree.model.TreeNodeProvider(adapter);
+            else
+                if isempty(obj.Model)
+                    obj.Model = adapter;
+                end
             end
             
             % Open file with adapter
@@ -292,7 +296,7 @@ classdef FileContentTree < handle
             end
         end
         
-        function icon = getIconForNode(obj, node)
+        function icon = getIconForNode(~, node)
             % Get icon for node based on type
             
             % Default icon path

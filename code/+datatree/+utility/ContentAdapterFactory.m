@@ -28,9 +28,9 @@ classdef ContentAdapterFactory
             % Create adapter based on extension
             switch lower(ext)
                 case '.mat'
-                    adapter = datatree.adapter.MatFileAdapter();
+                    adapter = datatree.adapter.MatFileAdapter(filePath);
                 case {'.h5', '.hdf5', '.nwb'}
-                    adapter = datatree.adapter.Hdf5FileAdapter();
+                    adapter = datatree.adapter.Hdf5FileAdapter(filePath);
                 otherwise
                     error('ContentAdapterFactory:UnsupportedFileType', ...
                         'Unsupported file type: %s', ext);
@@ -60,26 +60,29 @@ classdef ContentAdapterFactory
         end
         
         function [adapter, filePath] = createAdapterFromDialog()
-            % Create adapter by prompting user to select a file
+        %createAdapterFromDialog - Create adapter by prompting user to select a file
             
+            import datatree.utility.ContentAdapterFactory
+
             % Get supported extensions for file dialog
             extensions = ContentAdapterFactory.getSupportedExtensions();
+            extensions(strcmp(extensions, 'folder')) = [];
             
             % Create filter spec for uigetfile
-            filterSpec = {};
+            filterSpec = cell(numel(extensions), 2);
             for i = 1:length(extensions)
                 ext = extensions{i};
-                if strcmp(ext, 'folder')
-                    continue; % Skip folder for file dialog
-                end
-                filterSpec{end+1} = ['*' ext];
-                filterSpec{end+1} = ['*' ext ' files'];
+        
+                filterSpec{i, 1} = ['*' ext];
+                filterSpec{i, 2} = ['*' ext ' files'];
             end
             
             % Add all files option
-            filterSpec{end+1} = '*.*';
-            filterSpec{end+1} = 'All files';
+            filterSpec{i+1, 1} = '*.*';
+            filterSpec{i+1, 2} = 'All files';
             
+            filterSpec = reshape(filterSpec, 2, [])';
+        
             % Show file dialog
             [fileName, filePath] = uigetfile(filterSpec, 'Select a file');
             

@@ -48,7 +48,7 @@ classdef FileSystemAdapter < datatree.adapter.ContentAdapter
             if isempty(rootIdx)
                 % If not found, create a dummy entry
                 rootInfo = struct('name', '.', 'folder', fileparts(obj.RootPath), ...
-                    'date', '', 'bytes', 0, 'isdir', true, 'datenum', now);
+                    'date', '', 'bytes', 0, 'isdir', true, 'datenum', datetime("now"));
             else
                 rootInfo = dirInfo(rootIdx);
             end
@@ -70,7 +70,7 @@ classdef FileSystemAdapter < datatree.adapter.ContentAdapter
             nodes = {rootNode};
         end
         
-        function nodes = getChildren(obj, node)
+        function nodes = getChildren(~, node)
             % Get children of a node
             % node: Parent node
             
@@ -116,7 +116,7 @@ classdef FileSystemAdapter < datatree.adapter.ContentAdapter
             end
         end
         
-        function tf = hasChildren(obj, node)
+        function tf = hasChildren(~, node)
             % Check if a node has children
             % node: Node to check
             
@@ -135,7 +135,7 @@ classdef FileSystemAdapter < datatree.adapter.ContentAdapter
             end
         end
         
-        function data = getNodeData(obj, node)
+        function data = getNodeData(~, node)
             % Get data associated with a node
             % node: Node to get data for
             

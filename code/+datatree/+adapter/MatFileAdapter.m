@@ -26,8 +26,9 @@ classdef MatFileAdapter < datatree.adapter.ContentAdapter
     end
     
     methods
-        function obj = MatFileAdapter()
+        function obj = MatFileAdapter(filePath)
             % Constructor
+            obj.FilePath = filePath;
         end
         
         function open(obj, filePath)
