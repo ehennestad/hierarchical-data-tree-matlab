@@ -19,27 +19,40 @@ function demo_dataTreeViewer(filePath)
     f = uifigure('Name', 'File Content Tree Demo', 'Position', [100 100 800 600]);
     
     % Create layout
-    gl = uigridlayout(f, [1 2]);
-    gl.ColumnWidth = {'1x', '2x'};
+    mainGrid = uigridlayout(f, [1 2]);
+    mainGrid.RowHeight = {25, '1x'};
+    mainGrid.ColumnWidth = {'1x', '2x'};
+
+    % Create preview text area
+    treeLabel = uilabel(mainGrid);
+    treeLabel.Layout.Row = 1;
+    treeLabel.Layout.Column = 1;
+    treeLabel.FontWeight = 'bold';
+    treeLabel.Text = 'File content tree:';
     
+    % Create preview text area
+    previewLabel = uilabel(mainGrid);
+    previewLabel.Layout.Row = 1;
+    previewLabel.Layout.Column = 2;
+    previewLabel.FontWeight = 'bold';
+    previewLabel.Text = 'Data preview:';
+
     % Create tree panel
-    glTree = uigridlayout(gl, [1 1]);
-    glTree.Layout.Row = 1;
+    glTree = uigridlayout(mainGrid, [1 1]);
+    glTree.Layout.Row = 2;
     glTree.Layout.Column = 1;
+    glTree.Padding = 0;
 
     % Create file content tree
     tree = datatree.ui.FileContentTree(glTree, ...
         'AllowMultipleSelection', false, ...
         'FilePath', filePath, ...
         'ExpandAllOnCreation', "on");
-    
-    % Create preview panel
-    previewPanel = uipanel(gl);
-    previewPanel.Layout.Column = 2;
-    
+
     % Create preview text area
-    previewText = uitextarea(previewPanel);
-    previewText.Position = [10 10 previewPanel.Position(3)-20 previewPanel.Position(4)-20];
+    previewText = uitextarea(mainGrid);
+    previewText.Layout.Row = 2;
+    previewText.Layout.Column = 2;
     previewText.Value = 'Select a node to preview its contents';
 
     % Create toolbar
@@ -140,11 +153,9 @@ function demo_dataTreeViewer(filePath)
             node = nodes;
         end
         
-        assert(isa(node, 'struct'), 'Expected node to be a structure.')
-        % try
-        % catch
-        %     keyboard
-        % end
+        assert(isa(node, 'struct'), ...
+            'DATATREE:DemoPreview:NodeMustBeStruct', ...
+            'Expected node to be a structure.')
         
         % Get node data
         data = tree.Model.getNodeData(node);
@@ -161,13 +172,13 @@ function demo_dataTreeViewer(filePath)
             for i = 1:numPreviews
                 fieldValue = data.(fields{i});
                 if ischar(fieldValue) && numel(fieldValue) < 50
-                    preview = [preview, fields{i}, ': ', fieldValue, '\n'];
+                    fieldPreview = [fields{i}, ': ', fieldValue, '\n'];
                 elseif isnumeric(fieldValue) && isscalar(fieldValue)
-                    preview = [preview, fields{i}, ': ', num2str(fieldValue), '\n'];
+                    fieldPreview = [fields{i}, ': ', num2str(fieldValue), '\n'];
                 else
-                    preview = [preview, fields{i}, ': [', class(fieldValue), ']\n'];
+                    fieldPreview = [fields{i}, ': [', class(fieldValue), ']\n'];
                 end
-                %preview = [preview, newPreview];
+                preview = [preview, fieldPreview]; %#ok<AGROW>
             end
             if length(fields) > 20
                 preview = [preview, '...\n'];
@@ -183,12 +194,13 @@ function demo_dataTreeViewer(filePath)
                 for i = 1:numel(data)
                     cellValue = data{i};
                     if ischar(cellValue) && numel(cellValue) < 50
-                        preview = [preview, sprintf('Cell {%d}: %s\n', i, cellValue)];
+                        fieldPreview = [sprintf('Cell {%d}: %s\n', i, cellValue)];
                     elseif isnumeric(cellValue) && isscalar(cellValue)
-                        preview = [preview, sprintf('Cell {%d}: %g\n', i, cellValue)];
+                        fieldPreview = [sprintf('Cell {%d}: %g\n', i, cellValue)];
                     else
-                        preview = [preview, sprintf('Cell {%d}: [%s]\n', i, class(cellValue))];
+                        fieldPreview = [sprintf('Cell {%d}: [%s]\n', i, class(cellValue))];
                     end
+                    preview = [preview, fieldPreview]; %#ok<AGROW>
                 end
             end
         elseif isnumeric(data)
