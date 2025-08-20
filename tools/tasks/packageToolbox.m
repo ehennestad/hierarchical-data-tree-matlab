@@ -5,5 +5,6 @@ function packageToolbox(releaseType, versionString)
     end
     installMatBox()
     projectRootDirectory = datatreetools.projectdir();
-    matbox.tasks.packageToolbox(projectRootDirectory, releaseType, versionString)
+    matbox.tasks.packageToolbox(projectRootDirectory, releaseType, versionString, ...
+        "SourceFolderName", "code")
 end
