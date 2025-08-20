@@ -29,3 +29,5 @@ jobs:
       tests_directory: tools/tests
       matlab_release: latest      
       matlab_use_cache: false
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
