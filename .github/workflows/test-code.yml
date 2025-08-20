@@ -12,7 +12,10 @@ on:
     paths-ignore:
       - '*md'
       - '.github/**'
-
+      
+# Allows for manually running this workflow from the Actions tab
+workflow_dispatch:
+  
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
