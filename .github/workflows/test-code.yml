@@ -1,0 +1,33 @@
+name: Test code
+
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - '*md'
+      - '.github/**'
+
+  pull_request:
+    branches: [ "main" ]
+    paths-ignore:
+      - '*md'
+      - '.github/**'
+      
+  # Allows for manually running this workflow from the Actions tab
+  workflow_dispatch:
+  
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-code:
+    name: Analyse and test code
+    uses: ehennestad/matbox-actions/.github/workflows/test-code-workflow.yml@v1
+    with:
+      source_directory: code
+      tests_directory: tools/tests
+      matlab_release: latest      
+      matlab_use_cache: false
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
